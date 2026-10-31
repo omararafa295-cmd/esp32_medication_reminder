@@ -54,7 +54,7 @@ Engineered with a **Clean Object-Oriented Architecture (OOP)** in modern C++/Ard
 | :--- | :--- | :--- | :--- | :--- |
 | **Stop Button** | **GPIO 33** | RTC GPIO (`RTC_GPIO8`) | `INPUT_PULLUP` + RTC Pullup | External hardware interrupt (`FALLING`) to silence alarm & confirm dose |
 | **Piezo Buzzer** | **GPIO 25** | Digital Peripherals | Hardware LEDC PWM (10-bit) | Generates alternating medical frequencies (2000 Hz / 1200 Hz) |
-| **Status LED** | **GPIO 2** | Digital GPIO | `OUTPUT` (Active-HIGH) | Synchronous visual flashing during alarm |
+| **Status LED** | **GPIO 26** | Digital GPIO | `OUTPUT` (Active-HIGH) | Synchronous visual flashing during alarm |
 | **18650 Battery (+)** | **VIN / 5V** | Power Domain | 3.7V Nominal (4.2V Max) | Connects to onboard voltage regulator (stepped down to 3.3V) |
 | **18650 Battery (-)** | **GND** | System Ground | Ground Reference | Common ground return |
 
@@ -79,7 +79,7 @@ Engineered with a **Clean Object-Oriented Architecture (OOP)** in modern C++/Ard
   GND                  |                   |
                        |          [Pin 25] | GPIO 25 ----(+) [ Piezo Buzzer ]
                        |                   |                   (-) ---- GND
-                       |          [Pin 2 ] | GPIO 2  ----(+) [ Status LED ]
+                       |          [Pin 26] | GPIO 26 ----(+) [ Status LED ]
                        |                   |             (220Ω)---(-) - GND
                        +-------------------+
 ```

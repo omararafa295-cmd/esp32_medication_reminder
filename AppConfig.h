@@ -30,10 +30,10 @@
 
 /**
  * @brief Status Indicator LED
- * Connected to GPIO 2 (also corresponds to the onboard LED on most ESP32 DevKits).
+ * Connected to GPIO 26.
  * Flashes in strict synchrony with the medical alternating tone.
  */
-#define PIN_STATUS_LED              2
+#define PIN_STATUS_LED              26
 
 /**
  * @brief LED Logic Level Polarity

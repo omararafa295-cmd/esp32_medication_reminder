@@ -32,11 +32,7 @@ void SoundAlerter::writeHardwareTone(uint32_t frequencyHz) {
 }
 
 void SoundAlerter::setStatusLed(bool state) {
-#if LED_ACTIVE_HIGH
     digitalWrite(PIN_STATUS_LED, state ? HIGH : LOW);
-#else
-    digitalWrite(PIN_STATUS_LED, state ? LOW : HIGH);
-#endif
 }
 
 void SoundAlerter::silenceAll() {
