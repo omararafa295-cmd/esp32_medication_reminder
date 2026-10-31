@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedReminder Dashboard (Live Preview)</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--text:#f8fafc;--text-muted:#94a3b8;--accent:#38bdf8;--green:#22c55e;--red:#ef4444;--border:#334155;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+body{background:var(--bg);color:var(--text);padding:16px;max-width:600px;margin:0 auto;}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 0 20px;}
+h1{font-size:1.25rem;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px;}
+.badge{background:#0284c7;color:#fff;font-size:0.75rem;padding:4px 8px;border-radius:12px;font-weight:600;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.2);}
+.card-title{font-size:0.9rem;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:12px;letter-spacing:0.5px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.stat-box{background:#0f172a;border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.stat-val{font-size:1.6rem;font-weight:800;color:var(--text);margin-top:4px;}
+.stat-label{font-size:0.75rem;color:var(--text-muted);}
+.val-green{color:var(--green);}
+.val-red{color:var(--red);}
+.progress-bar{background:#334155;border-radius:8px;height:10px;overflow:hidden;margin-top:10px;}
+.progress-fill{background:var(--green);height:100%;width:80%;transition:width 0.4s ease;}
+label{font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:6px;}
+select,input{width:100%;padding:10px;background:#0f172a;border:1px solid var(--border);border-radius:8px;color:#fff;font-size:1rem;margin-bottom:12px;}
+.btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;transition:0.2s;}
+.btn-primary{background:#0284c7;color:#fff;}
+.btn-primary:active{background:#0369a1;}
+.btn-success{background:#16a34a;color:#fff;}
+.btn-success:active{background:#15803d;}
+.btn-danger{background:#dc2626;color:#fff;}
+.btn-danger:active{background:#b91c1c;}
+.btn-secondary{background:#475569;color:#fff;}
+.btn-secondary:active{background:#334155;}
+.status-msg{text-align:center;font-size:0.85rem;color:var(--accent);margin-top:8px;min-height:1.2rem;}
+footer{text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:20px;}
+.preview-alert{background:#1e3a5f;border:1px solid #38bdf8;padding:10px;border-radius:10px;font-size:0.8rem;color:#bae6fd;margin-bottom:16px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="preview-alert">
+  💻 <strong>Offline Desktop Preview Mode:</strong> This is the exact page embedded in the ESP32 firmware. When connected to the ESP32 Wi-Fi (<code>192.168.4.1</code>), it communicates directly with the microcontroller hardware in real-time.
+</div>
+
+<header>
+  <h1>💊 MedReminder</h1>
+  <span class="badge" id="connBadge">AP Mode (192.168.4.1)</span>
+</header>
+
+<div class="card">
+  <div class="card-title">Medication Adherence Metrics</div>
+  <div class="grid">
+    <div class="stat-box">
+      <div class="stat-label">Total Scheduled</div>
+      <div class="stat-val" id="valTotal">5</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Confirmed Taken</div>
+      <div class="stat-val val-green" id="valTaken">4</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Unanswered / Missed</div>
+      <div class="stat-val val-red" id="valMissed">1</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Adherence Rate</div>
+      <div class="stat-val" id="valAdherence">80.0%</div>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:80%;"></div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Medication Interval Configuration</div>
+  <label for="intervalSelect">Select Reminder Schedule:</label>
+  <select id="intervalSelect" onchange="onIntervalPresetChange()">
+    <option value="15" selected>15 Seconds (Lab Testing / Demo)</option>
+    <option value="60">1 Minute</option>
+    <option value="3600">1 Hour</option>
+    <option value="14400">4 Hours (6 times daily)</option>
+    <option value="21600">6 Hours (4 times daily)</option>
+    <option value="28800">8 Hours (3 times daily)</option>
+    <option value="43200">12 Hours (Twice daily)</option>
+    <option value="86400">24 Hours (Once daily)</option>
+    <option value="custom">Custom Interval (Seconds)...</option>
+  </select>
+
+  <div id="customDiv" style="display:none;">
+    <label for="customSec">Custom Interval in Seconds:</label>
+    <input type="number" id="customSec" min="5" max="86400" value="15">
+  </div>
+
+  <button class="btn btn-success" onclick="saveSettings()">💾 Save Schedule & Deep Sleep</button>
+</div>
+
+<div class="card">
+  <div class="card-title">Diagnostic & Hardware Controls</div>
+  <button class="btn btn-primary" onclick="testBuzzer()">🔔 Test Buzzer & Status LED</button>
+  <button class="btn btn-danger" onclick="resetStats()">🔄 Reset Adherence Counters</button>
+  <button class="btn btn-secondary" onclick="enterSleep()">💤 Exit Setup & Return to Sleep</button>
+  <div class="status-msg" id="statusMsg">Connected to ESP32 Web Portal</div>
+</div>
+
+<footer>ESP32 Medication Reminder • Open Source by Omar Arafa</footer>
+
+<script>
+let total = 5, taken = 4, missed = 1;
+
+function showMsg(txt, color="#38bdf8"){
+  const el = document.getElementById("statusMsg");
+  el.textContent = txt;
+  el.style.color = color;
+}
+
+function updateUI(){
+  document.getElementById("valTotal").textContent = total;
+  document.getElementById("valTaken").textContent = taken;
+  document.getElementById("valMissed").textContent = missed;
+  const adh = total > 0 ? ((taken / total) * 100).toFixed(1) : "100.0";
+  document.getElementById("valAdherence").textContent = adh + "%";
+  document.getElementById("progFill").style.width = Math.min(100, Math.max(0, adh)) + "%";
+}
+
+function onIntervalPresetChange(){
+  const val = document.getElementById("intervalSelect").value;
+  document.getElementById("customDiv").style.display = (val === "custom") ? "block" : "none";
+}
+
+function saveSettings(){
+  let sec = document.getElementById("intervalSelect").value;
+  if(sec === "custom") sec = document.getElementById("customSec").value;
+  showMsg("Saving new schedule: " + sec + " seconds...", "#38bdf8");
+  setTimeout(()=>{
+    showMsg("Saved! ESP32 would enter Deep Sleep now.", "#22c55e");
+  }, 1000);
+}
+
+function testBuzzer(){
+  showMsg("Simulating hardware chirp on GPIO 25 & 2...", "#38bdf8");
+  setTimeout(()=>{
+    showMsg("Buzzer & LED test executed successfully!", "#22c55e");
+  }, 800);
+}
+
+function resetStats(){
+  if(!confirm("Reset all medication counters to zero?")) return;
+  total = 0; taken = 0; missed = 0;
+  updateUI();
+  showMsg("All adherence statistics reset to zero.", "#22c55e");
+}
+
+function enterSleep(){
+  showMsg("Simulating Deep Sleep transition...", "#38bdf8");
+  setTimeout(()=>{
+    showMsg("ESP32 in Deep Sleep (~10µA). Wi-Fi disconnected.", "#22c55e");
+  }, 1000);
+}
+</script>
+</body>
+</html>
